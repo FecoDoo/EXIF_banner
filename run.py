@@ -81,7 +81,7 @@ def drawing(image_path: Path):
     # drawing author
     d.text(
         (0.03 * w, h + 0.55 * banner_h),
-        "K.Y.",
+        author,
         fill="grey",
         font=small_font,
         align="left",
@@ -112,13 +112,15 @@ def drawing(image_path: Path):
 
 
 # init global variables
-def init_worker(f, i, r):
+def init_worker(f, i, r, a):
     global font_path
     global icon_path
     global RATIO
+    global author
     font_path = f
     icon_path = i
     RATIO = r
+    author = a
 
 
 if __name__ == "__main__":
@@ -148,6 +150,12 @@ if __name__ == "__main__":
         default=10,
         type=int,
     )
+    parser.add_argument(
+        "author",
+        help="name of the author",
+        default="Author",
+        type=str,
+    )
     args = parser.parse_args()
 
     try:
@@ -155,6 +163,7 @@ if __name__ == "__main__":
         font_path = Path(args.font)
         icon_path = Path(args.icon)
         RATIO = int(args.ratio)
+        author = args.author
 
         if not image_dir.exists():
             raise FileNotFoundError("image_dir does not exist")
@@ -178,7 +187,9 @@ if __name__ == "__main__":
         print(e)
         sys.exit()
 
-    with Pool(initializer=init_worker, initargs=(font_path, icon_path, RATIO)) as pool:
+    with Pool(
+        initializer=init_worker, initargs=(font_path, icon_path, RATIO, author)
+    ) as pool:
         res = pool.map(func=drawing, iterable=images)
 
 
