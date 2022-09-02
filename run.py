@@ -10,7 +10,7 @@ from multiprocessing import Pool
 # main processing function
 def drawing(image_path: Path):
     name = image_path.name
-    parent = image_path.parent
+    parent = image_path.parents[1]
 
     img = Image.open(image_path)
     logo = Image.open(icon_path)
@@ -174,7 +174,7 @@ if __name__ == "__main__":
         if not icon_path.exists():
             raise FileNotFoundError("icon file does not exist")
 
-        proc_dir = image_dir.joinpath("processed")
+        proc_dir = Path(sys.path[0]).joinpath("processed")
         proc_dir.mkdir(exist_ok=True)
         images = list(image_dir.glob("*.JPG"))
 
