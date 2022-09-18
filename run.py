@@ -12,116 +12,119 @@ def drawing(image_path: Path):
     # detecting image path
     name = image_path.name
     parent = image_path.parents[1]
+    
+    try:
+        # loading image and camera brand
+        img = Image.open(image_path)
+        logo = Image.open(icon_path)
 
-    # loading image and camera brand
-    img = Image.open(image_path)
-    logo = Image.open(icon_path)
+        # loading image shape
+        w = img.size[0]
+        h = img.size[1]
 
-    # loading image shape
-    w = img.size[0]
-    h = img.size[1]
+        # loading fonts
+        large_font_size = math.ceil(0.012 * w)
+        small_font_size = math.ceil(0.010 * w)
 
-    # loading fonts
-    large_font_size = math.ceil(0.012 * w)
-    small_font_size = math.ceil(0.010 * w)
+        large_font = ImageFont.truetype(str(font_path), size=large_font_size)
+        small_font = ImageFont.truetype(str(font_path), size=small_font_size)
 
-    large_font = ImageFont.truetype(str(font_path), size=large_font_size)
-    small_font = ImageFont.truetype(str(font_path), size=small_font_size)
+        # resizing logo
+        logo_ratio = logo.size[1] / logo.size[0]
+        new_logo_width = w // Ratio
+        logo = logo.resize((new_logo_width, math.ceil(new_logo_width * logo_ratio)))
 
-    # resizing logo
-    logo_ratio = logo.size[1] / logo.size[0]
-    new_logo_width = w // Ratio
-    logo = logo.resize((new_logo_width, math.ceil(new_logo_width * logo_ratio)))
+        # EXIF
+        info = img.getexif()
 
-    # EXIF
-    info = img.getexif()
+        # load camera model info
+        exif_data_dict = {}
 
-    # load camera model info
-    exif_data_dict = {}
+        for k, v in info.items():
+            tag = ExifTags.TAGS.get(k)
+            exif_data_dict[tag] = v
+        model = exif_data_dict["Model"]
 
-    for k, v in info.items():
-        tag = ExifTags.TAGS.get(k)
-        exif_data_dict[tag] = v
+        # load EXIF info
+        exif_data = info.get_ifd(0x8769)
+        Date = exif_data.get(36867).replace(":", "-", 2)
+        ExposureTime = int(1 // float(exif_data.get(33434)))
+        ApertureValue = round(int(exif_data.get(37378)), 2)
+        FocalLength = int(exif_data.get(37386))
+        Lens = exif_data.get(42036)
+        iso = int(exif_data.get(34855))
 
-    model = exif_data_dict["Model"]
+        # generating new image
+        new_h = (Ratio + 1) * h // Ratio
+        banner_h = new_h - h
 
-    # load EXIF info
-    exif_data = info.get_ifd(0x8769)
-    Date = exif_data.get(36867).replace(":", "-", 2)
-    ExposureTime = int(1 // float(exif_data.get(33434)))
-    ApertureValue = round(int(exif_data.get(37378)), 2)
-    FocalLength = int(exif_data.get(37386))
-    Lens = exif_data.get(42036)
-    iso = int(exif_data.get(34855))
+        out = Image.new(mode="RGB", size=(w, new_h))
 
-    # generating new image
-    new_h = (Ratio + 1) * h // Ratio
-    banner_h = new_h - h
+        for i in range(w):  # for every pixel:
+            for j in range(h, new_h):
+                # change to black if not red
+                out.putpixel((i, j), (255, 255, 255))
 
-    out = Image.new(mode="RGB", size=(w, new_h))
+        # pasting orignal image
+        out.paste(img)
+        # adding camera brand
+        out.paste(logo, (math.ceil(0.65 * w), math.ceil(h + 0.4 * banner_h)))
 
-    for i in range(w):  # for every pixel:
-        for j in range(h, new_h):
-            # change to black if not red
-            out.putpixel((i, j), (255, 255, 255))
+        # adding EXIF info
+        d = ImageDraw.Draw(out)
 
-    # pasting orignal image
-    out.paste(img)
-    # adding camera brand
-    out.paste(logo, (math.ceil(0.65 * w), math.ceil(h + 0.4 * banner_h)))
+        # adding camera name
+        d.text(
+            (0.03 * w, h + 0.25 * banner_h),
+            model,
+            fill="black",
+            font=large_font,
+            align="left",
+        )
 
-    # adding EXIF info
-    d = ImageDraw.Draw(out)
+        # adding author name
+        d.text(
+            (0.03 * w, h + 0.55 * banner_h),
+            Author,
+            fill="grey",
+            font=small_font,
+            align="left",
+        )
 
-    # adding camera name
-    d.text(
-        (0.03 * w, h + 0.25 * banner_h),
-        model,
-        fill="black",
-        font=large_font,
-        align="left",
-    )
+        # adding description
+        d.text(
+            (0.2 * w, h + 0.3 * banner_h),
+            Description,
+            fill="grey",
+            font=small_font,
+            align="left",
+        )
 
-    # adding author name
-    d.text(
-        (0.03 * w, h + 0.55 * banner_h),
-        Author,
-        fill="grey",
-        font=small_font,
-        align="left",
-    )
+        # adding split line
+        d.line(
+            (0.78 * w, h + 0.2 * banner_h, 0.78 * w, h + 0.8 * banner_h),
+            fill=(220, 220, 220),
+            width=5,
+        )
 
-    # adding description
-    d.text(
-        (0.2 * w, h + 0.3 * banner_h),
-        Description,
-        fill="grey",
-        font=small_font,
-        align="left",
-    )
+        # adding exif info
+        d.text(
+            (0.8 * w, h + 0.25 * banner_h),
+            f"{FocalLength}mm  f/{ApertureValue}  {ExposureTime}ms  ISO {iso}",
+            fill="black",
+            font=small_font,
+            align="left",
+        )
+        # adding datetime
+        d.text(
+            (0.8 * w, h + 0.55 * banner_h), Date, fill="grey", font=small_font, align="left"
+        )
 
-    # adding split line
-    d.line(
-        (0.78 * w, h + 0.2 * banner_h, 0.78 * w, h + 0.8 * banner_h),
-        fill=(220, 220, 220),
-        width=5,
-    )
-
-    # adding exif info
-    d.text(
-        (0.8 * w, h + 0.25 * banner_h),
-        f"{FocalLength}mm  f/{ApertureValue}  {ExposureTime}ms  ISO {iso}",
-        fill="black",
-        font=small_font,
-        align="left",
-    )
-    # adding datetime
-    d.text(
-        (0.8 * w, h + 0.55 * banner_h), Date, fill="grey", font=small_font, align="left"
-    )
-
-    # saving image
-    out.save(parent.joinpath("processed", name))
+        # saving image
+        out.save(parent.joinpath("processed", name))
+    
+    except Exception as e:
+        print(f"{name}: {e}")
 
 
 # init global variables

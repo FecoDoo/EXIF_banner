@@ -25,4 +25,4 @@ The script comes with two compulsory and three optional arguments.
 > Note: no EXIF metadata will remain in processed images.
 ## Sample
 
-![sample image](images/sample.jpg)
+![sample image](samples/sample.jpg)
