@@ -48,7 +48,6 @@ def drawing(image_path: Path):
     # load EXIF info
     exif_data = info.get_ifd(0x8769)
     Date = exif_data.get(36867).replace(":", "-", 2)
-    Date = Date[:9] + "6" + Date[10:]
     ExposureTime = int(1 // float(exif_data.get(33434)))
     ApertureValue = round(int(exif_data.get(37378)), 2)
     FocalLength = int(exif_data.get(37386))
