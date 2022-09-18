@@ -1,14 +1,26 @@
 # Auto Banner Generator
 
-This script generates and attaches a banner with exif data and other misc info to the bottom of the input image.
+This script attaches a banner to the bottom of an image. The banner shows the camera brand, author, EXIF info, and datetime.
+
+## Install dependency
+
+The python environment is managed by pipenv. To install the environment, run
+
+```python
+pipenv install
+```
 
 ## Usage
+The script comes with two compulsory and three optional arguments.
 
-- fonts: copy and paste your desired font file (currently only ttf is supported) in this folder, and rename as `font.ttf`.
-- images: copy and paste all images that you want to process in this folder. Images should be in `jpg` format.
-- icons: copy and paste your brand icon in this folder. Target file should be named as `icon.jpg`.
+- **image_dir**: Directory where images are being processed.
+- **author**: Name of the author
+- **-d (optional)**: a short description will be added at the center of the banner
+- **-f (optional)**: Path to the desired font file (currently only ttf is supported), the default value is `fonts/font.ttf`.
+- **-i (optional)**: Path to the desired brand icon file (jpg), the default value is `icons/icon.jpg`
+- **-r (optional)**: The ratio of original image versus banner (in height), the default value is `10`.
 
-Run `run.py` file, processed images will be listed in the `images/processed` folder.
+`python run.py` will execute the processing. Processed images will be saved under  the `images/processed` folder.
 
 ## Sample
 
